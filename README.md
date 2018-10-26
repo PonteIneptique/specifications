@@ -1,6 +1,6 @@
 # Distributed Text Services (DTS)
 
-*The DTS Specification is currently a First Public Working Draft.*
+*The DTS Specification is currently a First Public Working Draft. __This fork is a working draft developing optional extensions to the core DTS Specification. It has not been accepted and is not recommended for use. For the current official version, see [https://github.com/distributed-text-services/specifications].*
 
 ## What
 
