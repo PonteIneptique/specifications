@@ -136,17 +136,27 @@ The response body after a successful POST request should contain a JSON-LD objec
 
 ##### Unsuccessful response content
 
-If a response returns a status of `400(Bad Request)` then the response body should contain a JSON object providing as much information as possible about which submitted data was missing or unacceptable. In particular, the response body should indicate whether:
+In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Collections endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
+
+If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `400(Bad Request)` error:
+
+```json
+{
+  "@context": "http://www.w3.org/ns/hydra/context.jsonld",
+  "@type": "Status",
+  "statusCode": 400,
+  "title": "Improperly Formet Request Body",
+  "description": "The body of a POST request to the Collections endpoint must be properly formed JSON-LD."
+}
+```
+
+For a `400(Bad Request)` error, the `description` should provide as much information as possible about which submitted data was missing or unacceptable. It should indicate whether:
 - there were missing required query parameters
 - any query parameters held unacceptable values
 - the request body did not have properly formed JSON-LD
 - the request body was properly formed but carried unacceptable values
-The description should also include the URL of the documentation for the Collections endpoint.
 
-If a response returns a status of `409(Conflict)` then the response body should contain a JSON object indicating that the requested `@id` value already exists and cannot be created.
-
-<!-- TODO: Has there been much discussion already about error responses? -->
-
+If a response returns a status of `409(Conflict)` then the JSON `description` value should indicate that the requested `@id` already exists and cannot be created.
 
 #### POST Example 1: Creating an Empty Top-Level Collection
 
@@ -286,16 +296,22 @@ In a successful PUT request, the response body should be a JSON-LD object repres
 
 ##### Unsuccessful response content
 
-If a response returns a status of `400(Bad Request)` then the response body should contain a JSON object providing as much information as possible about which submitted data was missing or unacceptable. In particular, the response body should indicate whether:
+In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Collections endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
 
-- there were missing required query parameters
-- any query parameters held unacceptable values
-- the request body did not have properly formed JSON-LD
-- the request body was properly formed but carried unacceptable values
+If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `404(Not Found)` error:
 
-The description should also include the URL of the documentation for the Collections endpoint.
+```json
+{
+  "@context": "http://www.w3.org/ns/hydra/context.jsonld",
+  "@type": "Status",
+  "statusCode": 404,
+  "title": "Not Found",
+  "description": "No item exists with the id specified in your request."
+}
+```
+If a response returns a status of `404(Not Found)` then the `description` value should indicate that the requested `@id` value does not exist and so the requested item cannot be modified.
 
-If a response returns a status of `404(Not Found)` then the response body  should contain a JSON object indicating that the requested `@id` value does not exist and so the requested item cannot be modified.
+If the status code is `400(Bad Request)` then the `description` should clarify which parts of the request data were not acceptable.
 
 #### PUT Example 1: Editing an Existing Collection
 
@@ -374,18 +390,58 @@ In a successful DELETE request, the response body should be a JSON-LD object rep
 
 ##### Unsuccessful response content
 
+In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Collections endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
+
+If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `404(Not Found)` error:
+
+```json
+{
+  "@context": "http://www.w3.org/ns/hydra/context.jsonld",
+  "@type": "Status",
+  "statusCode": 404,
+  "title": "Not Found",
+  "description": "No item exists with the id specified in your request."
+}
+```
+If a response returns a status of `404(Not Found)` then the `description` value should indicate that the requested `@id` value does not exist and so the requested item cannot be modified.
+
 #### DELETE Example 1: Deleting an Existing Collection
+
+In this example we will use a `DELETE` request to remove from the server the metadata for the collection with the `id` value "general." This will be a synchronous `DELETE` operation, so the successful response code will be `200(OK)`.
 
 ##### DELETE request URL
 
+- `/api/dts/collections/?id=general&token=XXXXX`
+
 ##### DELETE request body
+
+No body should be sent with the `DELETE` request.
 
 ##### Successful DELETE response status
 
+- 200(OK)
+
 ##### Successful DELETE response headers
 
-##### Successful DELETE response body
+| key | Value |
+| --- | ----- |
+| Content-Type  | application/ld+json             |
 
+##### successful DELETE response body
+
+```json
+{
+    "@context": {
+        "@vocab": "https://www.w3.org/ns/hydra/core#",
+        "dc": "http://purl.org/dc/terms/",
+        "dts": "https://w3id.org/dts/api#"
+    },
+    "@id": "general",
+    "@type": "Collection",
+    "totalItems": 0,
+    "title": "Collection Générale de l'École Nationale des Chartes",
+}
+```
 ## Document Endpoint: Optional Methods
 
 ### Extended URI
