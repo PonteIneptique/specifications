@@ -107,15 +107,19 @@ If a POST request is unsuccessful because of problems with the request content (
 
 If a POST request is unsuccessful because the specified item `@id` is already in use, then the return status code should be `409(Conflict)`. An implementation must never allow the creation of items with duplicate `@id` values.
 
-##### Successful response content
+##### Successful response headers
 
 The response headers after a successful POST request should include a `Location` value. This should be the URL where the newly created record can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/ld+json".
 
+##### Successful response body
+
 The response body after a successful POST request should contain a JSON-LD object representing the newly created metadata. This should be identical to the response a client would get using a GET request to the `Location` indicated in the response header. This will also mean that in most successful requests the JSON-LD contained in the response body will be identical to the object sent by the client in the POST.
 
-##### Unsuccessful response content
+##### Unsuccessful response headers
 
 In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Collections endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
+
+##### Unsuccessful response body
 
 If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `400(Bad Request)` error:
 
@@ -265,17 +269,21 @@ If a client wishes to delete the value of a term, the client must include that t
 
 If the specified item is updated successfully, the response status should be `200(OK)`.
 
-If no item exists with the `@id` specified in the request URL, the response status should be `404(Not Found)`. If there is some other problem with the request data, the response status should be `400(Bad Request)`.
+If no item exists with the `@id` specified in the request URL, the response status should be `404(Not Found)`. If there is some other problem with the request data, the response status should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
 
-##### Successful response content
+##### Successful response headers
 
 The response headers after a successful PUT request should include a `Location` value. This should be the URL where the newly created record can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/ld+json".
 
+##### Successful response body
+
 In a successful PUT request, the response body should be a JSON-LD object representing the edited item. This object should always include the `@context` and `@id` properties. Aside from those, however, this object should only include those term/value pairs that were modified in the transaction. This allows the client to quickly recognize whether the correct information was updated on the server.
 
-##### Unsuccessful response content
+##### Unsuccessful response headers
 
 In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Collections endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
+
+##### Unsuccessful response body
 
 If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `404(Not Found)` error:
 
@@ -361,15 +369,19 @@ With a `DELETE` request the server should provide different responses based on w
 
 If a response returns a status of `404(Not Found)` then the response body should contain a JSON object indicating that the requested `@id` value does not exist and so the requested item cannot be modified.
 
-##### Successful response content
+##### Successful response headers
 
 Unlike with other methods, the response headers after a successful DELETE request should *not* include a `Location` value. The response should, though, include a `Content-type` header with the value "application/ld+json".
 
+##### Successful response body
+
 In a successful DELETE request, the response body should be a JSON-LD object representing the record that was deleted. This object should always include the `@context` and `@id` properties along with all other terms that carried associated values at the time of deletion.
 
-##### Unsuccessful response content
+##### Unsuccessful response headers
 
 In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Collections endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
+
+##### Unsuccessful response body
 
 If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `404(Not Found)` error:
 
@@ -550,23 +562,27 @@ Note that in most cases the actual text to be inserted is the __contents__ of th
 
 A successful POST request to the Documents endpoint should return the status code `201(Created)`.
 
-If a POST request is unsuccessful because of problems with the request content (i.e., parameters or request body), then the return status code should be `400(Bad Request)`.
+If a POST request is unsuccessful because of problems with the request content (i.e., parameters or request body), then the return status code should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
 
 A POST request should also return `409(Conflict)` if it would create a new initial form of a document for which some text already exists. This would be when no "after" or "before" parameter is supplied, but at least one segment of the document already contains text (even if this text is simply an empty string).
 
 A `POST` Documents request also may not result in a text segment whose reference identifier is the same as that of an existing segment. If, for example, a document already includes text at the location "4.23.8", then a `POST` request which would result in a *second* location "4.23.8" should fail and return `409(Conflict)`.
 
-##### Successful response content
+##### Successful response headers
 
 The response headers after a successful `POST` Documents request should include a `Location` value. This should be the URL where the newly inserted text segment(s) can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/tei+xml".
+
+##### Successful response body
 
 The response should also include a `Link` header as detailed in the core documentation for the Documents endpoint. This `Link` gives URL references for the previous and next segments of the document, a URL for the document's navigation structure, and a URL for the document's Collections metadata.
 
 The response body after a successful POST request should contain an XML object representing the newly created text segment(s). This should be identical to the response a client would get using a GET request to the `Location` indicated in the response header. This will also mean that in most successful requests the XML contained in the response body will be identical to the object sent by the client in the `POST`.
 
-##### Unsuccessful response content
+##### Unsuccessful response headers
 
 In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Documents endpoint documentation. The response should also include a `Content-type` header with a value of "application/tei+xml".
+
+##### Unsuccessful response body
 
 If a response returns an error code, the response body should contain an XML object following the DTS specification for XML status responses (https://w3id.org/dts/api). For example, this would be a well-formed response body for a `400(Bad Request)` error:
 
@@ -761,19 +777,23 @@ The contents of this `<dts:fragment>` must be a single XML element (along with i
 
 If the specified section of the document is successfully modified, the response status should be `200(OK)`.
 
-If no structural section exists with an identifier matching the "ref" parameter in the request, the response status should be `404(Not Found)`. If there is some other problem with the request data, the response status should be `400(Bad Request)`.
+If no structural section exists with an identifier matching the "ref" parameter in the request, the response status should be `404(Not Found)`. If there is some other problem with the request data, the response status should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
 
-##### Successful response content
+##### Successful response headers
 
 The response headers after a successful PUT request should include a `Location` value. This should be the URL where the newly modified document section can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/tei+xml".
 
 The response should also include a `Link` header as detailed in the core documentation for the Documents endpoint. This `Link` gives URL references for the previous and next segments of the document, a URL for the document's navigation structure, and a URL for the document's Collections metadata.
 
+##### Successful response body
+
 In a successful PUT request, the response body should be an XML object with the same structure as a `GET` response, but containing the the newly modified contents of the specified text section. This allows the client to quickly recognize whether the correct information was updated on the server.
 
-##### Unsuccessful response content
+##### Unsuccessful response headers
 
 In an unsuccessful `PUT` request, the response headers should include a `Location` whose value is the URL for the Documents endpoint documentation. The response should also include a `Content-type` header with a value of "application/tei+xml".
+
+##### Unsuccessful response body
 
 If a response returns an error code, the response body should contain an XML object following the DTS specification for XML status responses (https://w3id.org/dts/api). For example, this would be a well-formed response body for a `400(Bad Request)` error:
 ```xml
