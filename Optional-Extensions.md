@@ -557,25 +557,25 @@ Here is a template of the URI for the Documents endpoint with support for the ex
 
 ### POST on the Document Endpoint  
 
-The `POST` method of the Documents endpoint allows for creation of new textual passages in a resource. This method requires that the document already has a metadata record accessible via the Collections endpoint.
+The POST method of the Documents endpoint allows for creation of new textual passages in a resource. __This method requires that the document already has a metadata record accessible via the Collections endpoint__.
 
-Note that this method should __not__ be used to modify existing segments of text. In other words, if the specified reference label already exists in the document on the server, this method should return an error and refuse to perform the requested operation. If, for example, a document already has a line 6 following the existing line 5, then `POST` cannot be used to insert new or added text in that existing line 6. Modification of the text in existing document segments must be done using the `PUT` method instead.
+Note that this method should __not__ be used to modify existing segments of text. In other words, if the specified reference label already exists in the document on the server, this method should return an error and refuse to perform the requested operation. If, for example, a document already has a line 6 following the existing line 5, then POST cannot be used to insert new or added text in that existing line 6. Modification of the text in existing document segments must be done using the PUT method instead.
 
 #### POST Query parameters
 
-The only strictly required parameters for a `POST` Documents request are "id" and (if supported) "token." If neither "before" nor "after" is supplied, the server should interpret the request as supplying the initial form of a new document. In that case, the server should return an error if (a) some text already exists for that document, or (b) the request body contains a `<dts:fragment>` element.
+The only strictly required parameters for a POST Documents request are `id` and (if supported) `token`. If neither `before` nor `after` is supplied, the server should interpret the request as supplying the initial form of a new document. In that case, the request should fail if (a) some text already exists for that document, or (b) the request body contains a `<dts:fragment>` element.
 
-In most cases, though, the query will be inserting a new segment of text into a document that already contains some text. In such instances, the query must include either a "before" or an "after" parameter to indicate where the new text segment will be inserted.
+In most cases, though, the request will be inserting a new structural segment into a document that already contains some segments. In such instances, the query must include either a `before` or an `after` parameter to indicate where the new text segment will be inserted.
 
-Neither the "ref" parameter nor the pair of "start"/"end" parameters should be provided in a `POST` Documents request. The reference information for the inserted segment(s) should be included using the standard TEI attributes in the XML of the request body.
+Neither the `ref` parameter nor the pair of `start`/`end` parameters should be provided in a POST Documents request. The reference information for the inserted segment(s) should be included using the standard TEI attributes in the XML of the request body.
 
-Note that the "after" or "before" references should also be used to determine the depth of the insertion in the document's citation structure. The lowest structural level specified in the "after" or "before" reference is the level at which the contents of the XML `<fragment>` will be inserted. In other words, the new segment will be taken to be a sibling to the segment specified in that reference.
+Note that the `after` or `before` reference should also determine the depth of the insertion in the document's citation structure. The lowest structural level specified in the `after` or `before` reference is the level at which the contents of the XML `<dts:fragment>` will be inserted. In other words, the new segment will be taken to be a sibling to the segment specified in that reference.
 
 #### POST Request Body
 
-The body of the `POST` request must be a properly formed `<TEI>` root node containing TEI compliant XML. See the further specifications under "Default Scheme" above.
+The body of the POST request must be a properly formed `<TEI>` root node containing TEI compliant XML. See the further specifications under "Default Scheme" above.
 
-Note that in most cases the actual text to be inserted is the __contents__ of the inner `<fragment>` element in the request body. The only exception to this rule is where no text has yet been created for a document, in which case the entire `<TEI>` rootnode (along with all its contents) will be used as the initial form of the document.
+Note that in most cases the actual text to be inserted is the __contents__ of the inner `<fragment>` element in the request body. The only exception to this rule is where no structural segment has yet been created for a document, in which case the entire `<TEI>` rootnode (along with all its contents) will be accepted as the initial form of the document.
 
 #### POST Responses
 
@@ -585,19 +585,19 @@ A successful POST request to the Documents endpoint should return the status cod
 
 If a POST request is unsuccessful because of problems with the request content (i.e., parameters or request body), then the return status code should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
 
-A POST request should also return `409(Conflict)` if it would create a new initial form of a document for which some text already exists. This would be when no "after" or "before" parameter is supplied, but at least one segment of the document already contains text (even if this text is simply an empty string).
+A POST request should also return `409(Conflict)` if it would create a new initial form of a document for which some segments already exist (even if those segments are empty). This would happen when no `after` or `before` parameter is supplied, but at least one segment of the document already exists on the server (even if it contains only an empty string).
 
-A `POST` Documents request also may not result in a text segment whose reference identifier is the same as that of an existing segment. If, for example, a document already includes text at the location "4.23.8", then a `POST` request which would result in a *second* location "4.23.8" should fail and return `409(Conflict)`.
+A POST Documents request also may not result in a text segment whose reference identifier is the same as that of an existing segment. If, for example, a document already includes a segment "4.23.8", then a POST request which would result in a *second* segment "4.23.8" should fail and return `409(Conflict)`.
 
 ##### Successful response headers
 
-The response headers after a successful `POST` Documents request should include a `Location` value. This should be the URL where the newly inserted text segment(s) can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/tei+xml".
+The response headers after a successful POST Documents request should include a `Location` value. This should be the URL where the newly inserted text segment(s) can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/tei+xml".
 
+
+The response should also include a `Link` header as detailed in the core documentation for the Documents endpoint. This `Link` gives URL references for the previous and next segments of the document, a URL for the document's navigation structure, and a URL for the document's Collections metadata. __If no previous or next segment exists, those parts of the `Link` header should give the URL for the newly created segment instead.__ If the request has created multiple segments, the `next` value for the `Link` header should be the last created segment, and the `previous` value should be the first created segment.
 ##### Successful response body
 
-The response should also include a `Link` header as detailed in the core documentation for the Documents endpoint. This `Link` gives URL references for the previous and next segments of the document, a URL for the document's navigation structure, and a URL for the document's Collections metadata.
-
-The response body after a successful POST request should contain an XML object representing the newly created text segment(s). This should be identical to the response a client would get using a GET request to the `Location` indicated in the response header. This will also mean that in most successful requests the XML contained in the response body will be identical to the object sent by the client in the `POST`.
+The response body after a successful POST request should contain an XML object representing the newly created text segment (and any children). This should be identical to the response a client would receive using a GET request to the `Location` indicated in the response header. This will also mean that in most successful requests the XML contained in the response body will be identical to the object sent by the client in the POST.
 
 ##### Unsuccessful response headers
 
@@ -609,29 +609,35 @@ If a response returns an error code, the response body should contain an XML obj
 
 ```xml
 <error statusCode="400" xmlns="https://w3id.org/dts/api">
-  <title>Improperly Formet Request Body</title>
+  <title>Improperly Formed Request Body</title>
   <description>The body of a POST request to the Documents endpoint must be properly formed XML. If it is submitting the initial text for a new document, the request body must be a <TEI> rootnode with properly formed and schema-compliant children.</description>
 </error>
 ```
 
-For a `400(Bad Request)` error, the `description` should provide as much information as possible about which submitted data was missing or unacceptable. It should indicate whether:
+For a `400(Bad Request)` error, the `<description>` should provide as much information as possible about which submitted data was missing or unacceptable. It should indicate whether:
 - there were missing required query parameters
 - any query parameters held unacceptable values
 - the request body did not have properly formed XML
 - the request body was properly formed but carried unacceptable values
 
+It is strongly recommended that projects implement more specific 4XX-series error responses to handle more specific validation errors such as
+- XML that fails to satisfy the TEI schema
+- XML that conflicts with the current document's citation structure
+- XML that violates other project-specific conventions for implementing the TEI specification
+In such cases the `<description>` of the error response should include both an explanation of the issue and the URL for the necessary documentation.
+
 If a response returns a status of `409(Conflict)` then the XML `<description>` element should contain an indication that the request would result in a duplicate segment in the document's citation structure.
 
 #### POST Example 1: Creating the initial text for a new document
 
-In this example we will submit the first text segments to constitute a new document. Prior to this operation no textual data exists for the document on the server. This first `POST` request only creates verses 1-2 of chapter 1 in the document `urn:cts:ancJewLit:1Enoch`.
+In this example we will submit the first structural segments to constitute a new document. Prior to this operation no segments exist for the document on the server. This first POST request only creates verses 1-2 of chapter 1 in the document identified by the URN `urn:cts:ancJewLit:1Enoch`.
 
-Note that a metadata record for the document must already be added via the Collections endpoint. This is the only way to establish a valid identifier for the document, which is then used for the `POST` request.
+Note that a metadata record for the document must already have been added via the Collections endpoint. This is the only way to establish a valid identifier for the document, which is then used for the Documents POST request.
 
-Note too that no `<teiHeader>` element precedes the main `<text>` element. The kind of metadata contained in a `<teiHeader>` should be created either using the Collections endpoint (in JSON-LD format) or the Docinfo endpoint (where an XML TEI header can be uploaded).
+Note too that a `<teiHeader>` element precedes the main `<text>` element. If a `<teiHeader>` is included with the initial form of the document, its metadata should be extracted and integrated with the data accessible via the Collections endpoint (in JSON-LD format).
 
 ##### POST request URL
-Notice that this request omits the usual "before" or "after" parameters.
+Notice that this request omits the usual `before` or `after` parameters.
 
 - `/api/dts/documents/?id=urn:cts:ancJewLit:1Enoch&token=XXXXX`
 
@@ -675,6 +681,7 @@ Notice that this request omits the usual "before" or "after" parameters.
 | key | Value |
 | --- | ----- |
 | Location      | /api/dts/documents?id=urn:cts:ancJewLit:1Enoch |
+| Link          | </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:1>; rel="first", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:1>; rel="prev", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:2>; rel="next", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:2>; rel="last", </api/dts/navigation?id=urn:cts:ancJewLit:1Enoch>; rel="contents", </api/dts/collections?id=urn:cts:ancJewLit:1Enoch>; rel="collection"|
 | Content-Type  | application/tei+xml             |
 
 ##### Successful POST response body
@@ -713,10 +720,10 @@ Notice that this request omits the usual "before" or "after" parameters.
 In this example we will create a new text segment in the existing document `urn:cts:ancJewLit:1Enoch`. Initially we created the document with just verses 1 and 2 of chapter 1. We will now add a third verse to that same first chapter.
 
 ##### POST request URL
-
 - `/api/dts/documents?id=urn:cts:ancJewLit:1Enoch&after=1:2&token=XXXXX`
 
 ##### POST request body
+
 Note that since some text already exists for this document, the new segment is submitted in a `<dts:fragment>` element.
 
 ```xml
@@ -748,6 +755,7 @@ Note that since some text already exists for this document, the new segment is s
 | key | Value |
 | --- | ----- |
 | Location      | /api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:3 |
+| Link          | </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:1>; rel="first", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:2>; rel="prev", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:3>; rel="next", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:3>; rel="last", </api/dts/navigation?id=urn:cts:ancJewLit:1Enoch>; rel="contents", </api/dts/collections?id=urn:cts:ancJewLit:1Enoch>; rel="collection"|
 | Content-Type  | application/tei+xml               |
 
 ##### Successful POST response body
