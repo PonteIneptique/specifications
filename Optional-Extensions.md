@@ -128,7 +128,7 @@ If a response returns an error code, the response body should contain a JSON-LD 
   "@context": "http://www.w3.org/ns/hydra/context.jsonld",
   "@type": "Status",
   "statusCode": 400,
-  "title": "Improperly Formet Request Body",
+  "title": "Improperly Formed Request Body",
   "description": "The body of a POST request to the Collections endpoint must be properly formed JSON-LD."
 }
 ```
@@ -164,18 +164,18 @@ In this example we will create a new, empty, top-level collection on a server wh
     "title": "Collection Générale de l'École Nationale des Chartes",
 }
 ```
-##### successful POST response status
+##### Successful POST response status
 
 - 201(Created)
 
-##### successful POST response headers
+##### Successful POST response headers
 
 | key | Value |
 | --- | ----- |
 | Location      | /api/dts/collections?id=general |
 | Content-Type  | application/ld+json             |
 
-##### successful POST response body
+##### Successful POST response body
 
 ```json
 {
@@ -194,7 +194,7 @@ In this example we will create a new, empty, top-level collection on a server wh
 
 #### POST Example 2: Creating a New Child Document in an Existing Collection
 
-In this example we will create a new Readable Collection (i.e., a textual Resource) inside an existing collection "lasciva_roma". Again, this presumes that the Collection endpoint is found at `/api/dts/collections`.
+In this example we will create a new Readable Collection (i.e., a textual Resource) inside an existing collection "lasciva_roma". Again, this presumes that the Collections endpoint is found at `/api/dts/collections`.
 
 ##### POST request URL
 
@@ -217,18 +217,18 @@ In this example we will create a new Readable Collection (i.e., a textual Resour
 }
 ```
 
-##### successful POST response status
+##### Successful POST response status
 
 - 201(Created)
 
-##### successful POST response headers
+##### Successful POST response headers
 
 | key | Value |
 | --- | ----- |
 | Location      | /api/dts/collections?id=urn:cts:latinLit:phi1103.phi001.lascivaroma-lat1 |
 | Content-Type  | application/ld+json             |
 
-##### successful POST response body
+##### Successful POST response body
 
 ```json
 {
@@ -247,19 +247,19 @@ In this example we will create a new Readable Collection (i.e., a textual Resour
 
 
 ### PUT on the Collections Endpoint
-The `PUT` method of the Collection endpoint allows for modification of the metadata for an existing collection or document. Only one item (collection or resource) may be modified in a single `PUT` request.
+The PUT method of the Collection endpoint allows for modification of the metadata for an existing collection or document. Only one item (collection or resource) may be modified in a single PUT request.
 
-The request body must be valid JSON-LD. The simplest way to ensure this is by first retrieving a JSON-LD object (using `GET`) that represents the collection or document to be modified. The client may then modify that JSON-LD object and return it in the body of the `PUT` request.
+The request body must be valid JSON-LD. The simplest way to ensure this is by first retrieving a JSON-LD object (using GET) that represents the collection or document to be modified. The client may then modify that JSON-LD object and return it in the body of the PUT request.
 
 #### PUT Query Parameters
 
-The one required parameter for a `PUT` request is `id`. This should be the unique identifier of the collection or resource that the client wants to modify.
+The one required parameter for a PUT request is `id`. This should be the unique identifier of the collection or resource that the client wants to modify.
 
-The other parameter that may be accepted is `token` which carries the client's authentication token.
+The other parameter that may be accepted is `token`. This parameter carries the client's authentication token.
 
 #### PUT Request Body
 
-The request body must be valid JSON-LD, following the scheme set out in the core specification for the Collection endpoint. There are, however, no minimum necessary terms to include in a PUT request (as there are in POST requests). The client may opt to include in the JSON-LD object submitted only those terms that are being modified. Terms left out of the submitted object are not deleted but simply left unchanged on the server. The submitted JSON-LD object still must, however, include the `@context` property, setting the default vocabulary to Hydra and providing DCT, TEI and DTS namespace prefixes.
+The request body must be valid JSON-LD, following the scheme set out in the core specification for the Collections endpoint. There are, however, no minimum necessary terms to include in a PUT request (as there are in POST requests). The client may opt to include in the JSON-LD object submitted only those terms that are being modified. __Terms left out of the submitted object should not be deleted__ but simply left unchanged on the server. The submitted JSON-LD object still must, however, include the `@context` property, setting the default vocabulary to Hydra and providing DCT, TEI and DTS namespace prefixes.
 
 If a client wishes to delete the value of a term, the client must include that term in the submitted JSON object but assign it an empty string ("") as its value. This API specification does not provide for complete removal of the term itself from a record.
 
@@ -273,11 +273,11 @@ If no item exists with the `@id` specified in the request URL, the response stat
 
 ##### Successful response headers
 
-The response headers after a successful PUT request should include a `Location` value. This should be the URL where the newly created record can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/ld+json".
+The response headers after a successful PUT request should include a `Location` value. This should be the URL where the newly modified record can be retrieved via a GET request. The response should also include a `Content-type` header with a value of "application/ld+json".
 
 ##### Successful response body
 
-In a successful PUT request, the response body should be a JSON-LD object representing the edited item. This object should always include the `@context` and `@id` properties. Aside from those, however, this object should only include those term/value pairs that were modified in the transaction. This allows the client to quickly recognize whether the correct information was updated on the server.
+In a successful PUT request, the response body should be a JSON-LD object representing the edited item. This object should always include the `@context` and `@id` properties. Aside from those, however, this object __should only include those term/value pairs that were modified in the transaction__. This allows the client to quickly recognize whether the correct information was updated on the server.
 
 ##### Unsuccessful response headers
 
@@ -293,7 +293,7 @@ If a response returns an error code, the response body should contain a JSON-LD 
   "@type": "Status",
   "statusCode": 404,
   "title": "Not Found",
-  "description": "No item exists with the id specified in your request."
+  "description": "No item exists with the id specified in your request. If you are trying to create a new item, please use the POST method."
 }
 ```
 If a response returns a status of `404(Not Found)` then the `description` value should indicate that the requested `@id` value does not exist and so the requested item cannot be modified.
@@ -302,7 +302,7 @@ If the status code is `400(Bad Request)` then the `description` should clarify w
 
 #### PUT Example 1: Editing an Existing Collection
 
-In this example we will use a `PUT` request to modify the metadata for the collection with the `id` value "general." We will shorten the `title` value to read just "Collection Générale".
+In this example we will use a PUT request to modify the metadata for the collection with the `id` value "general." We will shorten the `title` value to read just "Collection Générale".
 
 ##### PUT request URL
 
@@ -347,27 +347,28 @@ In this example we will use a `PUT` request to modify the metadata for the colle
 ```
 
 ### DELETE on the Collections Endpoint  
-The `DELETE` method of the Collection endpoint allows for removal of a collection or resource. Only one item (collection or resource) may be removed in a single `DELETE` request.
+
+The DELETE method of the Collections endpoint allows for removal of a collection or resource. Only one item (collection or resource) may be removed in a single DELETE request.
 
 <!-- TODO: Should we allow deletion of non-empty collections, i.e. deletion of collection and children simultaneously? -->
 
 #### DELETE Query Parameters
 
-The only query parameter that *must* be accepted for a `DELETE` request is the unique `id` of the item to be removed.
+The only query parameter that *must* be accepted for a DELETE request is the unique `id` of the item to be removed.
 
-The other parameter that *may* be accepted is `token` which carries the client's authentication token.
+The other parameter that *may* be accepted is `token`, which carries the client's authentication token.
 
 #### DELETE Request Body
 
-Delete requests do not include a body, so the request body should be empty.
+DELETE requests do not include a body, so the request body should be empty.
 
 #### DELETE Responses
 
 ##### Status codes
 
-With a `DELETE` request the server should provide different responses based on whether or not the operation has already concluded when the response is sent. If the deletion is done synchronously, and is finished at response time, the returned status code should be `200(OK)`. If the request simply began an asynchronous deletion process, then the response should return `202(Accept)`.
+With a DELETE request the server should provide different responses based on whether or not the operation has already concluded when the response is sent. If the deletion is done synchronously, and is finished at response time, the returned status code should be `200(OK)`. If the request simply began an asynchronous deletion process, then the response should return `202(Accept)`.
 
-If a response returns a status of `404(Not Found)` then the response body should contain a JSON object indicating that the requested `@id` value does not exist and so the requested item cannot be modified.
+If no item exists with the `id` specified in the request URL, the response status should be `404(Not Found)`. If there is some other problem with the request data, the response status should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
 
 ##### Successful response headers
 
@@ -398,7 +399,7 @@ If a response returns a status of `404(Not Found)` then the `description` value 
 
 #### DELETE Example 1: Deleting an Existing Collection
 
-In this example we will use a `DELETE` request to remove from the server the metadata for the collection with the `id` value "general." This will be a synchronous `DELETE` operation, so the successful response code will be `200(OK)`.
+In this example we will use a DELETE request to remove from the server the metadata for the collection with the `id` "general." This will be a synchronous DELETE operation, so the successful response code will be `200(OK)`.
 
 ##### DELETE request URL
 
@@ -406,7 +407,7 @@ In this example we will use a `DELETE` request to remove from the server the met
 
 ##### DELETE request body
 
-No body should be sent with the `DELETE` request.
+No body should be sent with the DELETE request.
 
 ##### Successful DELETE response status
 
@@ -435,9 +436,11 @@ No body should be sent with the `DELETE` request.
 ```
 ## Documents Endpoint: Optional Methods
 
-In addition to retrieving the text of resources via the `GET` method, implementations may also support creation and modification of textual units through the methods POST, PUT, and DELETE.
+In addition to retrieving the text of resources via the `GET` method, implementations may also support creation and modification of textual resources through the methods POST, PUT, and DELETE.
 
 This documentation assumes that you have read the core specification for the Documents endpoint.
+
+In the specification below, the terms "segment" or "structural segment" refer to divisions of a textual resource based on its citation structure. For these purposes a "segment" may be at any organizational level that is included in the document's citation scheme. So if a document is divided into three structural levels for the purposes of citation (such as "book", "paragraph", and "line"), then the reference 3.5.24 would refer to segment 3 at the top level, segment 5 at the second level, and segment 24 at the bottom level of the resource's citation structure. Most of these extended methods for the Documents endpoint work by creating, modifying, or deleting complete "segments" of this kind.
 
 ### Default Scheme
 
