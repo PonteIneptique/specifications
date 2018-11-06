@@ -436,9 +436,7 @@ No body should be sent with the DELETE request.
 ```
 ## Documents Endpoint: Optional Methods
 
-In addition to retrieving the text of resources via the `GET` method, implementations may also support creation and modification of textual resources through the methods POST, PUT, and DELETE.
-
-This documentation assumes that you have read the core specification for the Documents endpoint.
+In addition to retrieving the text of resources via the `GET` method, implementations may also support creation and modification of textual resources through the methods POST, PUT, and DELETE. This documentation assumes that you have read the core specification for the Documents endpoint.
 
 In the specification below, the terms "segment" or "structural segment" refer to divisions of a textual resource based on its citation structure. For these purposes a "segment" may be at any organizational level that is included in the document's citation scheme. So if a document is divided into three structural levels for the purposes of citation (such as "book", "paragraph", and "line"), then the reference 3.5.24 would refer to segment 3 at the top level, segment 5 at the second level, and segment 24 at the bottom level of the resource's citation structure. Most of these extended methods for the Documents endpoint work by creating, modifying, or deleting complete "segments" of this kind.
 
@@ -446,7 +444,7 @@ In the specification below, the terms "segment" or "structural segment" refer to
 
 As with the core `GET` specifications, the other methods of the Documents endpoint __may__ accept as many different text encoding schemes as the implementer wishes. Any implementation __must__, though, at least support XML data encoded using the Text Encoding Initiative (TEI) schema. The specification that follows will assume that information is being transferred in this format.
 
-As with the core Documents specification, these extended methods also should expect to receive textual data as a `<TEI>` rootnode of the namespace http://www.tei-c.org/ns/1.0. If an entire document is being sent in the body of a single request (as when a new document is first created) the contents of that <TEI> rootnode need simply be compliant with the TEI specification. In all other cases, the text being submitted in the request body should be wrapped in a  `<fragment>` element of the DTS Namespace (https://w3id.org/dts/api#). So most request bodies will look like this:
+As with the core Documents specification, these extended methods also should expect to receive textual data as a `<TEI>` rootnode of the namespace http://www.tei-c.org/ns/1.0. If an entire document is being sent in the body of a single request (as when a new document is first created) the contents of that <TEI> rootnode need simply be compliant with the TEI specification. In all other cases, the text being submitted in the request body should be wrapped in a  `<fragment>` element of the DTS namespace (https://w3id.org/dts/api). So most request bodies will look like this:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -461,7 +459,26 @@ Again, the text contained in the `<fragment>` element may be any part of a TEI-c
 
 The TEI schema often allows for multiple ways of encoding the same information. Projects implementing these extended Documents methods may want to provide further guidelines about how the TEI guidelines are to be implemented. Such further guidelines should be included or referenced in the API documentation provided at the root URL for the Documents endpoint.
 
-Note that the core `GET` specification allows for arbitrary siblings to be included alongside the `<fragment>` element inside the `<TEI>` rootnode. For textual data being submitted via `POST` or `PUT` requests such siblings __should be ignored__. Contextual information (metadata) about the document should be submitted using the Collections or Docinfo endpoints. Contextual information about a particular passage of text should be submitted using the Annotations endpoint.
+Note that the core `GET` specification allows for arbitrary siblings to be included alongside the `<fragment>` element inside the `<TEI>` rootnode. For textual data being submitted via `POST` or `PUT` requests such siblings __should be ignored__. Contextual information (metadata) about the document should be submitted using the Collections endpoint.
+
+### Preserving the Integrity of Edited Documents
+
+#### Validating Changes to Documents
+
+Because of its flexibility, at some points this specification relies on clients to ensure that the XML they submit is correctly structured. This requires more than simply that clients submit valid TEI XML when creating or editing a text segment. It is strongly recommended that servers implementing these extended methods offer robust validation of any submitted XML. This should include validating that the submitted text or fragment
+
+- is well-formed XML
+- satsfies the requirements of the TEI schema
+- is consistent with the citation structure of the document being edited
+- is consistent with the specific application of the TEI specification being used by the implementing project
+
+Failure to meet any of these criteria should result in a failed request and an error response that pinpoints the problem in the submitted text as specifically as possible.
+
+#### Restricting the Scope of Editing Operations
+
+This burden of validation can be mitigated by restricting editing operations to one bottom-level segment of the document at a time. In a document with a three-level structural hierarchy of book, paragraph, and line, this would mean that only one line could be edited or deleted at a time. Such a restriction would allow the server to easily control the XML document structure. It would also, though, make some larger-scale editing operations unwieldy.
+
+This specification leaves the choice to enforce editing restrictions like this up to the implementer. If such restrictions are imposed, any request that is rejected as a result must be accompanied by a clear error message. The error message must (a) explain the restriction, and (b) provide a URL where the restriction is documented.
 
 ### Extended URI
 
@@ -479,14 +496,15 @@ The extended Documents endpoint should accept the following query parameters, de
 | before             | (Either this or "after" required for POST) passage after which the new segment should be inserted | POST |
 | token	             | (May be required) Authentication token for access control	| POST, PUT, DELETE |
 
-Note that, as in the core Documents specification, one must either provide a "ref" parameter __or__ a pair of "start" and "end" parameters. A request cannot combine "ref" with the other two. If, say, a "ref" and a "start" are both provided this should trigger an error response.
+Note that, as in the core Documents specification, one must either provide a "ref" parameter __or__ a pair of "start" and "end" parameters. A request cannot combine "ref" with the other two. If, say, a "ref" and a "start" are both provided this should cause the request to fail.
 
-Two new parameters are introduced for the extended Documents endpoint: "after" and "before." These allow one to specify in a `POST` request where a new text segment should be inserted. One or the other of "after" and "post" must be included in a `POST` request.
+Two new parameters are introduced for the extended Documents endpoint: "after" and "before." These allow one to specify in a POST request where a new text segment should be inserted. One or the other of "after" and "post" must be included in a POST request.
 
 As with the other extended methods, there is also the optional addition of the "token" parameter for authentication and access control.
 
 #### Extended Documents URI Template
-Here is a template of the URI for the Documents endpoint with support for the extended methods. The route itself (/dts/api/documents/) is up to the implementer. The only new parameter added to the core Documents URI template is the "token" parameter.
+Here is a template of the URI for the Documents endpoint with support for the extended methods. The route itself (here `/dts/api/documents/`) is up to the implementer.
+
 ```json
 {
   "@context": {
