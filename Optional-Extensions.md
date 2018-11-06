@@ -4,25 +4,6 @@
 
 This page provides optional extensions to the DTS specification. The core specification is focused on consumption (retrieval) of documents and their metadata. These extensions provide for creating, updating, and deleting documents, sections of documents, and their metadata (full CRUD). An API that implements the DTS specification need not include these extensions if it will not be allowing these other kinds of interaction. If an implementation does allow for more than just consumption of data, however, it should do so using the relevant extensions.
 
-## Extensions and the Base API Endpoint
-
-If the client does a `GET` on the base API endpoint, the response should include a path for any of the optional endpoints the implementation supports. For example, if all of the optional endpoints are supported, the response would read something like this:
-
-```
-{
-  "@context": "/dts/api/contexts/EntryPoint.jsonld",
-  "@id": "/dts/api/",
-  "@type": "EntryPoint",
-  "collections": "/dts/api/collections/",
-  "documents": "/dts/api/documents/",
-  "navigation" : "/dts/api/navigation"
-  "docinfo" : "/dts/api/docinfo"
-  "media" : "/dts/api/media"
-  "annotation" : "/dts/api/annotation"
-}
-```
-(In this example, the path of the base endpoint is `/dts/api`, but a server can choose a different relative URL.)
-
 ## Collections Endpoint: Optional Methods
 
 In addition to retrieving metadata on collections via the GET method, implementations may also support creation and management of collections through the methods POST, PUT, and DELETE.
@@ -33,7 +14,7 @@ This documentation assumes that you have read the core specification for the Col
 
 #### Extended Collection Query Parameters
 
-Note that the core `page` and `nav` parameters are not accepted for any of the extended request methods. One additional parameter, `parent`, must be accepted if the `POST` method is supported.
+Note that the core `page` and `nav` parameters are not accepted for any of the extended request methods. One additional parameter, `parent`, must be accepted if the POST method is supported.
 
 Assuming that the implementation wants to maintain control over who can create and modify server data, the new `token` parameter also allows for token-based authentication (as with OAuth 2.0) if desired. It is up to the implementation to decide how such tokens should be generated and processed.
 
@@ -45,9 +26,9 @@ Assuming that the implementation wants to maintain control over who can create a
 | parent | identifier for the collection under which a new collection or document is to be created. Spaces and other problematic characters in the identifier should be url encoded. | POST |
 | token | authentication token for access control | POST, PUT, DELETE |
 
-#### Extended URI Collection Template
+#### Extended URI Collections Template
 
-The following template is returned at the base collection endpoint, instructing clients how to build valid URL requests. The route itself (`/dts/api/collection/`) is up to the implementer.
+The following template is returned at the base collection endpoint, instructing clients how to build valid URL requests. The route itself (here `/dts/api/collections/`) is up to the implementer.
 <!---TODO: Is there a way of indicating in the template which methods are supported for which parameters?--->
 
 ```json
@@ -92,29 +73,29 @@ The following template is returned at the base collection endpoint, instructing 
 
 ### POST on the Collections Endpoint
 
-The `POST` method of the Collection endpoint allows for creation of the metadata record for a new collection or new document within a collection. Only one top-level item (collections and/or documents) may be created in a single `POST` request, but this request may simultaneously create any number of children.
+The POST method of the Collections endpoint allows for creation of the metadata record for a new collection or new readable resource (i.e., document) within a collection. Only one top-level item (collection and/or resource) may be created in a single POST request, but this request may simultaneously create any number of children.
 
 #### POST Query parameters
 
-There are no required query parameters for a `POST` request to the Collection endpoint. The one optional parameter is `parent`. This should be the unique identifier of an existing collection. If a `parent` is supplied, then the new item will be created as a child member of that collection. Otherwise the new item will be created at the top level of the target repository.
+There are no required query parameters for a POST request to the Collections endpoint. The one optional parameter is `parent`. This should be the unique identifier of an existing collection. If a `parent` is supplied, then the new item will be created as a child member of that collection. Otherwise the new item will be created at the top level of the target repository.
 
-The other parameter that may be accepted is `token` which carries the client's authentication token.
+The other parameter that may be accepted is `token`. This parameter carries the client's authentication token.
 
 #### POST Request Body
 
-The request body must be valid JSON-LD, following the scheme set out in the core specification for the Collection endpoint. The minimum required terms for each item to be created are:
+The request body must be valid JSON-LD, following the scheme set out in the core specification for the Collections endpoint. The minimum required terms for each item to be created are:
 
 | Term  | Description    |
 | ----- |--------------- |
 | `title`         | a single string                                |
-| `@id`           | the unique identifier of the object            |
-| `@type`         | either Collection or Resource                  |
-| `totalItems`    | the number of children contained by the object |
+| `@id`           | the unique identifier of the item being created|
+| `@type`         | a string with one of the two values "Collection" and "Resource"                  |
+| `totalItems`    | the number of children contained by the new item at its creation |
 | `dts:citeDepth` | the maximum depth of a readable resource (required only when creating a Resource item). |
 
 If children of the new top-level item are to be created, their metadata should be included as a list under the `member` term.
 
-The JSON object must also begin with the `@context` property, setting the default vocabulary to Hydra and providing DCT, TEI and DTS namespace prefixes. This only needs to be included once at the top level of the JSON object. If children are included under `member` the `@context` is not repeated for each child.
+The JSON object must also begin with the `@context` property, setting the default vocabulary to Hydra and providing DCT, TEI and DTS namespace prefixes. This only needs to be included once at the top level of the JSON object. If children are included under `member`, the `@context` is not repeated for each child.
 
 #### POST responses
 
@@ -122,7 +103,7 @@ The JSON object must also begin with the `@context` property, setting the defaul
 
 A successful POST request should return the status code `201(Created)`.
 
-If a POST request is unsuccessful because of problems with the request content (i.e., parameters or request body), then the return status code should be `400(Bad Request)`.
+If a POST request is unsuccessful because of problems with the request content (i.e., parameters or request body), then the return status code should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
 
 If a POST request is unsuccessful because the specified item `@id` is already in use, then the return status code should be `409(Conflict)`. An implementation must never allow the creation of items with duplicate `@id` values.
 
@@ -873,46 +854,3 @@ If you compare this with POST Example 1 above, you will notice that the modifica
 ```
 
 ### DELETE on the Document Endpoint  
-
-
-## Optional Docinfo Endpoint
-
-The Docinfo endpoint is an optional extention for creating and modifying in-depth metadata related to a single document. At present the richest standard for representing document metadata is the `<teiHeader>` element and its children, part of the Text Encoding Initiative schema. So the Docinfo endpoint must accept metadata in this format. Implementations may also accept alternate formats at their discression, provided that the same data may always be manipulated in the form of a TEI header XML element.
-
-### Docinfo URI
-
-### GET on the Docinfo Endpoint
-
-### POST on the Docinfo Endpoint  
-
-### PUT on the Docinfo Endpoint  
-
-### DELETE on the Docinfo Endpoint  
-
-## Optional Media Endpoint
-
-The Media endpoint is an optional extension for uploading and managing media files related to a document, especially manuscript images and audio recordings. For uploads and file modifications, the Media endpoint accepts a JSON-LD object that includes both metadata about the file and the contents of the media file itself (in Base 64 encoding).
-
-### Media URI
-
-### GET on the Media Endpoint
-
-### POST on the Media Endpoint  
-
-### PUT on the Media Endpoint  
-
-### DELETE on the Media Endpoint  
-
-## Optional Annotations Endpoint
-
-The Annotations endpoint is an optional extension for creating and managing annotations that comment on a document or media file. The API is generic enough to be used for all kinds of annotation, including editorial comments, user notes, and co-ordinate mappings between regions of an image file and sections of a document. Implementations may use custom tags to distinguish any number of different annotation types.
-
-### Annotation URI
-
-### GET on the Annotation Endpoint
-
-### POST on the Annotation Endpoint  
-
-### PUT on the Annotation Endpoint  
-
-### DELETE on the Annotation Endpoint  
