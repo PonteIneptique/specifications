@@ -786,11 +786,11 @@ The `PUT` method of the Documents endpoint allows for modification of existing t
 
 Note that this method should __not__ be used to create new structural segments of text. For example, if the citation structure of the document already contains a section "5.7.31" then the `PUT` method may be used to modify that section. If section "5.7.31" does not already exist in the document on the server, an attempt to edit that segment using `PUT` will result in an error response. The `POST` method must first be used to add that segment to the document. Likewise, `PUT` should never result in the deletion of a segment in the document's citation structure. Of course, other XML entities below lowest level of a document's citation structure may be freely added or removed by the `PUT` method
 
-#### POST Query parameters
+#### PUT Query parameters
 
 The three required parameters for a `PUT` Documents request are "id," "token" (if supported by the implementation), and "ref." Only one structural segment of the document may be modified in a single `PUT` request.
 
-The text/XML submitted in the body of a Documents `PUT` request will completely replace the XML entity representing the identified text segment. So the submitted fragment __must include the outer element__ identified by the "ref" value. If you identify your submitted text as a modified version of line "12", and if each line is represented by a TEI `<ln>` element, you would include the opening and closing tags `<ln xml:id="16">` and `</ln>` around the changed content. This is to allow modification of the attributes on the outer element tag.
+The text/XML submitted in the body of a Document's `PUT` request will completely replace the XML entity representing the identified text segment. So the submitted fragment __must include the outer element__ identified by the "ref" value. If you identify your submitted text as a modified version of line "12", and if each line is represented by a TEI `<ln>` element, you would include the opening and closing tags `<ln xml:id="16">` and `</ln>` around the changed content. This is to allow modification of the attributes on the outer element tag.
 
 The "ref" references also determines the structural depth of the modification. Suppose a document has a three-level citation structure represented in XML by nested `<div>` elements. A `PUT` request with a "ref" of "3.16.8" will replace just one `<div>` element at the lowest structural level. If the request is instead sent with a "ref" parameter of "3.16", the submitted `<div>` element will replace the second-level `<div>` with the identifier "3.16". In the latter case, the submitted `<div>` element will need to contain the series of nested `<div>` elements that represent the bottom-level segments "3.16.1", "3.16.2", "3.16.3", etc. It is recommended that implementations check the submitted text before performing upper-level modifications like this, to ensure that no lower-level structural segments are being created or destroyed. Alternately, a client may avoid this issue by only making `PUT` requests at the lowest level of the document's citation structure.
 
@@ -903,3 +903,100 @@ If you compare this with POST Example 1 above, you will notice that the modifica
 ```
 
 ### DELETE on the Document Endpoint  
+
+The DELETE method of the Document endpoint allows for removal of a segment of text from a document. Note that the DELETE operation removes the specified segments entirely from the document's reference structure. So if you DELETE the segment designated "12.6.2" from a document, there will no longer be a line "2" in section "12.6". If, instead, you simply want to remove the text of a segment, leaving the segment itself in the document structure, you should use the PUT method to replace the text with an empty string.
+
+#### DELETE Query Parameters
+
+The query parameters that *must* be accepted for a DELETE request are the `id` of the document, `token` (if supported by the implementation), and the same three parameters used in GET requests: "ref", "start", and "end".
+
+Multiple structural segments of the document may be deleted simultaneously. The `start` and `end` parameters should be used as described in the GET specification for the Document endpoint, with one key difference: __both__ a `start` and an `end` parameter must be provided. This is to prevent the accidental deletion of everything before or after the provided reference. If a `start` parameter is provided without a corresponding `end` (or vice versa), the request should trigger an error.
+
+Note that the depth of the reference provided in the `ref` (or `start`/`end`) parameters determines the depth of the delete operation. If a document has three structural levels, and a DELETE request is submitted with a `ref` of "12.6", then *all* of the second-level section "12.6" will be removed from its structure. If a `ref` of "12" is submitted for that same document, all of the top-level section "12" will be removed.
+
+#### DELETE Request Body
+
+DELETE requests do not include a body, so the request body should be empty.
+
+#### DELETE Responses
+
+##### Status codes
+
+With a DELETE request the server should provide different responses based on whether or not the operation has already concluded when the response is sent. If the deletion is done synchronously, and is finished at response time, the returned status code should be `200(OK)`. If the request simply began an asynchronous deletion process, then the response should return `202(Accept)`.
+
+If no item exists with the `id` specified in the request URL, the response status should be `404(Not Found)`. Similarly, if the document contains no structural segment matching the specific `ref` (or `start`/`end`) value, the response should return `404(Not Found)`. If there is some other problem with the request data, the response status should be `400(Bad Request)` or a custom status code in the 4XX series signaling a more specific error.
+
+##### Successful response headers
+
+Unlike with other methods, the response headers after a successful DELETE request should *not* include a `Location` value. The response should, though, include a `Content-type` header with the value "application/tei+xml".
+
+The response should also include a `Link` header as detailed in the core documentation for the Documents endpoint. This `Link` gives URL references for the previous and next segments of the document, a URL for the document's navigation structure, and a URL for the document's Collections metadata. This allows clients, if they wish, to navigate automatically to an adjascent part of the document being edited.
+
+##### Successful response body
+
+In a successful DELETE request, the response body should be an XML object with the same structure as a `GET` response, but containing the old contents of the deleted text section. This allows the client to quickly recognize whether the correct segment(s) was removed on the server.
+
+##### Unsuccessful response headers
+
+In an unsuccessful request, the response headers should include a `Location` whose value is the URL for the Documents endpoint documentation. The response should also include a `Content-type` header with a value of "application/ld+json".
+
+##### Unsuccessful response body
+
+If a response returns an error code, the response body should contain a JSON-LD object following the hydra specification for status responses (https://www.hydra-cg.com/spec/latest/core/#description-of-http-status-codes-and-errors). For example, this would be a well-formed response body for a `404(Not Found)` error:
+
+```json
+{
+  "@context": "http://www.w3.org/ns/hydra/context.jsonld",
+  "@type": "Status",
+  "statusCode": 404,
+  "title": "Segment Not Found",
+  "description": "The document you requested does exist, but no structural segment exists corresponding to the reference in your request."
+}
+```
+If a response returns a status of `404(Not Found)` then the `description` value should indicate whether the problem arose from the requested `id` value or the requested `ref` value. In other words, does the requested document not exist on the server, or does that document not contain the requested structural segment(s)?
+
+#### DELETE Example 1: Deleting an Existing Collection
+
+In this example we will use a DELETE request to remove the section with the reference "1:3" from the document with the id "urn:cts:ancJewLit:1Enoch". Since this document is a critical edition, that section contains XML markup for the variant readings as well as the text of each reading. This will be a synchronous DELETE operation, so the successful response code will be `200(OK)`.
+
+##### DELETE request URL
+
+- `/api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:3&token=XXXXX`
+
+##### DELETE request body
+
+No body should be sent with the DELETE request.
+
+##### Successful DELETE response status
+
+- `200(OK)`
+
+##### Successful DELETE response headers
+
+| key | Value |
+| --- | ----- |
+| Link          | </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:2>; rel="prev", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=1:4>; rel="next", </api/dts/documents?id=urn:cts:ancJewLit:1Enoch&ref=145:12>; rel="last", </api/dts/navigation?id=urn:cts:ancJewLit:1Enoch>; rel="contents", </api/dts/collections?id=urn:cts:ancJewLit:1Enoch>; rel="collection"|
+| Content-Type  | application/ld+json             |
+
+##### successful DELETE response body
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns="http://www.tei-c.org/ns/1.0">
+  <dts:fragment xmlns:dts="https://w3id.org/dts/api#">
+    <div n="1:3" xml:id="1En1:3" type="Verse">
+        <app xml:id="5">
+          <rdg wit="#Bertalotto #p">በእንተ፡​ኅሩያን፡​እቤ፡​ወአውሣእኩ፡​በእንቲአሆሙ፡​ምስለ፡​ዘይወጽእ፡​ቅዱስ፡​</rdg>
+        </app>
+        <app xml:id="6">
+          <rdg wit="#p">ወዓቢይ፡​</rdg>
+          <rdg wit="#Bertalotto">ወዐቢይ፡​</rdg>
+          <rdg wit="#a"></rdg>
+        </app>
+        <app xml:id="7">
+          <rdg wit="#Bertalotto #p">እማኅደሩ</rdg>
+        </app>
+    </div>
+  </dts:fragment>
+</TEI>
+```
