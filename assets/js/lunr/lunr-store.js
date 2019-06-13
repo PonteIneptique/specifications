@@ -3,8 +3,8 @@ layout: null
 ---
 
 var store = [
-  {%- assign docs = site.pages -%}
-  {%- for doc in docs | where_exp:'doc','doc.layout == "single"'-%}
+  {%- assign docs = site.pages | where_exp:'doc','doc.layout == "single"' -%}
+  {%- for doc in docs-%}
     {%- if doc.header.teaser -%}
       {%- capture teaser -%}{{ doc.header.teaser }}{%- endcapture -%}
     {%- else -%}
