@@ -28,6 +28,7 @@ defaults:
       toc_level: 3
       toc_left: true
       sidebar: false
+      classes: wide
 
 bradcrumbs: true
 breadcrumb_home_label : "Home"
