@@ -1,4 +1,3 @@
-theme: jekyll-theme-leap-day
 title: Distributed Text Services Specifications
 description: The Distributed Text Services (DTS) Specification defines a Hypermedia-Driven Web API for working with collections of text as machine-actionable data.
 show_downloads: false
@@ -11,3 +10,6 @@ menu:
     url: "Navigation-Endpoint.html"
   - title : "Documents Endpoint"
     url: "Documents-Endpoint.html"
+plugins:
+  "jekyll-include-cache"
+remote_theme: "mmistakes/minimal-mistakes@4.16.4"

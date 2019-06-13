@@ -1,0 +1,12 @@
+# main links
+main:
+  - title: "Home"
+    url: https://w3id.org/dts
+  - title : "Entry Point"
+    url: "Entry.html"
+  - title : "Collections Endpoint"
+    url: "Collections-Endpoint.html"
+  - title : "Navigation Endpoint"
+    url: "Navigation-Endpoint.html"
+  - title : "Documents Endpoint"
+    url: "Documents-Endpoint.html"
