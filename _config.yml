@@ -3,7 +3,10 @@ remote_theme: "mmistakes/minimal-mistakes@4.16.4"
 title: Distributed Text Services Specifications
 description: The Distributed Text Services (DTS) Specification defines a Hypermedia-Driven Web API for working with collections of text as machine-actionable data.
 show_downloads: false
+repository: "distributed-text-services/specifications"
 search: true
+# Better than lunr ?
+search_provider: algolia
 menu:
   - title : "Entry Point"
     url: "Entry.html"
