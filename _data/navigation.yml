@@ -1,7 +1,5 @@
 # main links
 main:
-  - title: "Home"
-    url: https://w3id.org/dts
   - title : "Entry Point"
     url: "Entry.html"
   - title : "Collections Endpoint"
