@@ -25,6 +25,8 @@ defaults:
       toc: true
       toc_label: "Table of Contents"
       toc_icon: "cog"
+      toc_level: 2
+      sidebare: false
 
 bradcrumbs: true
 breadcrumb_home_label : "Home"
