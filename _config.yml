@@ -20,3 +20,13 @@ plugins:
   - jekyll-feed
   - jemoji
   - jekyll-include-cache
+defaults:   
+  # _posts
+  - scope:
+      path: ""
+      type: page
+    values:
+      layout: single
+      share: true
+      author_profile: false
+      related: true
