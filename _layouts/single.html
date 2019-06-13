@@ -14,15 +14,18 @@ layout: default
   {% endunless %}
 {% endif %}
 
-{% if page.toc_left %}
 <!-- Really hacky -->
 <style type="text/css">
+{% if page.toc_left %}
 	.sidebar p, .sidebar li {
 		font-size: 1em!important;
 	}
+{% endif %}
+	.page__content h1:first-of-type {
+		opacity: 0;
+	}
 </style>
 <!-- end really hacky -->
-{% endif %}
 
 <div id="main" role="main">
   {% if page.sidebar %}
