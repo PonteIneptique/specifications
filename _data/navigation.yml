@@ -1,10 +1,10 @@
 # main links
 main:
-  - title : "Entry Point"
+  - title : "General"
     url: "Entry.html"
-  - title : "Collections Endpoint"
+  - title : "Collection"
     url: "Collections-Endpoint.html"
-  - title : "Navigation Endpoint"
+  - title : "Navigation"
     url: "Navigation-Endpoint.html"
-  - title : "Documents Endpoint"
+  - title : "Document"
     url: "Documents-Endpoint.html"
