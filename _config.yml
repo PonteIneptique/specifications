@@ -19,6 +19,7 @@ defaults:
       type: page
     values:
       layout: single
+      title: false
       share: true
       author_profile: false
       related: false
