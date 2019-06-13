@@ -1,6 +1,6 @@
 remote_theme: "mmistakes/minimal-mistakes@4.16.4"
 
-title: Distributed Text Services Specifications
+title: Distributed Text Services
 description: The Distributed Text Services (DTS) Specification defines a Hypermedia-Driven Web API for working with collections of text as machine-actionable data.
 repository: "distributed-text-services/specifications"
 search: true
@@ -27,12 +27,14 @@ defaults:
       path: ""
       type: page
     values:
-      layout: single
+      layout: wide
       share: true
       author_profile: false
       related: false
       toc: true
       toc_label: "Table of Contents"
+      toc_icon: "cog"
+      
 bradcrumbs: true
 breadcrumb_home_label : "Home"
 breadcrumb_separator  : "/"
