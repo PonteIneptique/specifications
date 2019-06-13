@@ -6,7 +6,7 @@ show_downloads: false
 repository: "distributed-text-services/specifications"
 search: true
 # Better than lunr ?
-search_provider: algolia
+search_full_content: true
 menu:
   - title : "Entry Point"
     url: "Entry.html"
@@ -32,4 +32,4 @@ defaults:
       layout: single
       share: true
       author_profile: false
-      related: true
+      related: false
